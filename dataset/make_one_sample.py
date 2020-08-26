@@ -12,6 +12,7 @@ import base64
 import bz2
 import scipy
 from scipy import ndimage
+
 import multiprocessing as mp
 import argparse
 
@@ -150,30 +151,8 @@ def process_func(idx):
     delta = np.frombuffer(bz2.decompress(cryptography.fernet.Fernet(key).decrypt(delta_bytes)), dtype=np.uint8).reshape(3, 1024, 1024)
     # Apply delta image.
     img = img + delta
-    # Verify MD5.
-    """
-    md5 = hashlib.md5()
-    md5.update(img.tobytes())
-    assert md5.hexdigest() == fields['final_md5'][idx]
-    """
+
     return img
 
-
-def do_the_work(img_num):
-    print('Create image number {}'.format(img_num))
-    img = process_func(img_num)
-    np.save(os.path.join(delta_dir, 'imgHQ%05d' % img_num), [img])
-
-# for img_num in range(expected_dat):
-#     do_the_work(img_num)
-
-num_workers = mp.cpu_count() - 1
-print('Starting a pool with {} workers'.format(num_workers))
-with mp.Pool(processes=num_workers) as pool:
-    pool.map(do_the_work, list(range(expected_dat)))
-if len(glob.glob(os.path.join(delta_dir, '*.npy'))) != 30000:
-    raise ValueError('Expected to find {} npy files\n Something went wrong!'.format(30000))
-# Remove the dat files
-for filepath in glob.glob(os.path.join(delta_dir, '*.dat')):
-    os.remove(filepath)
-print('All done! Congratulations!')
+img = process_func(0)
+print(img)
